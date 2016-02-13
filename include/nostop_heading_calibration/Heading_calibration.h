@@ -18,19 +18,15 @@
 #define IMU_ADDRESS 0x68 // imu address --> sudo i2cdetect -y 1
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
-#define H_BYTE_X_MAG_ADDRESS 03H
-#define L_BYTE_X_MAG_ADDRESS 04H
-#define H_BYTE_Y_MAG_ADDRESS 05H
-#define L_BYTE_Y_MAG_ADDRESS 06H
-#define H_BYTE_Z_MAG_ADDRESS 07H
-#define L_BYTE_Z_MAG_ADDRESS 08H
+#define H_BYTE_X_MAG_ADDRESS 0x04
+#define L_BYTE_X_MAG_ADDRESS 0x03
+#define H_BYTE_Y_MAG_ADDRESS 0x06
+#define L_BYTE_Y_MAG_ADDRESS 0x05
+#define H_BYTE_Z_MAG_ADDRESS 0x08
+#define L_BYTE_Z_MAG_ADDRESS 0x07
 
-// #define H_BYTE_X_GYRO_ADDRESS 0x43
-// #define L_BYTE_X_GYRO_ADDRESS 0x44
-// #define H_BYTE_Y_GYRO_ADDRESS 0x45
-// #define L_BYTE_Y_GYRO_ADDRESS 0x46
-// #define H_BYTE_Z_GYRO_ADDRESS 0x47
-// #define L_BYTE_Z_GYRO_ADDRESS 0x48
+#define IMU_ADDRESS 0x68
+
 #define message_size 10 
 namespace Robotics 
 {	
@@ -43,12 +39,13 @@ namespace Robotics
 		        ros::NodeHandle m_imu_calibration_node;
 			std::string m_robot_name;
 			std::string m_topic_name;
-			// IMU
 			char m_address;
 			int m_reg_address;
-			int m_value;
-			int m_ret;
+			int m_x_min,m_x_max,m_y_min,m_y_max,m_z_min,m_z_max;
+			
+			// IMU
 			int m_flag;
+			std::vector<int> m_vector_x, m_vector_y, m_vector_z;
 			ros::Publisher m_pub_command;
 			sensor_msgs::Imu m_imu;
 			geometry_msgs::Twist m_command;
@@ -59,6 +56,7 @@ namespace Robotics
 			Heading_calibration(std::string& robot_name,std::string& topic_name,float& ang_vel_z,int& duration); 
 			void magnetometer_data_saving();
 			void magnetometer_calibration();
+			std::vector<double> SB_computing();
 			//void Callback(const ros::TimerEvent& event);
 			~Heading_calibration();
 		};

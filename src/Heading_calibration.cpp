@@ -1,7 +1,10 @@
 #include <ros/ros.h>
 #include "Heading_calibration.h"
 #include "time.h"
-
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <cmath>
 
 
 using namespace std;
@@ -26,8 +29,7 @@ m_robot_name(robot_name)
 	//m_reader_imu_pub = m_imu_reader_node.advertise<sensor_msgs::Imu>("/"+m_robot_name+"/imu_data", 5);
 	m_pub_command = m_imu_calibration_node.advertise<geometry_msgs::Twist>("/"+m_topic_name, 5);
 	m_command.angular.z = ang_vel_z;
-	 timer = m_imu_calibration_node.createTimer(ros::Duration(duration), callback);
-
+	timer = m_imu_calibration_node.createTimer(ros::Duration(duration), callback);
 // 	wiringPiSetup();
 	try{
 	    //m_reg_address = wiringPiI2CSetup(m_address);
@@ -64,6 +66,7 @@ void Heading_calibration::magnetometer_calibration()
 	    
 	 case 1:
 	 {
+	   //SB_computing();
 	   //calcolo di S e B
 	   m_flag=2;
 	   break;
@@ -88,31 +91,71 @@ void Heading_calibration::magnetometer_calibration()
 
 void Heading_calibration::magnetometer_data_saving()
 {
-// 	short int ax,ay,az,wx,wy,wz;
-// 	ax=wiringPiI2CReadReg8(m_reg_address,H_BYTE_X_ACC_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_X_ACC_ADDRESS);
-//         ay=wiringPiI2CReadReg8(m_reg_address,H_BYTE_Y_ACC_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_Y_ACC_ADDRESS);
-//         az=wiringPiI2CReadReg8(m_reg_address,H_BYTE_Z_ACC_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_Z_ACC_ADDRESS);
-//         wx=wiringPiI2CReadReg8(m_reg_address,H_BYTE_X_GYRO_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_X_GYRO_ADDRESS);
-//         wy=wiringPiI2CReadReg8(m_reg_address,H_BYTE_Y_GYRO_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_Y_GYRO_ADDRESS);
-//         wz=wiringPiI2CReadReg8(m_reg_address,H_BYTE_Z_GYRO_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_Z_GYRO_ADDRESS);
-// 
+ 	short int mx,my,mz;
+ 	mx=wiringPiI2CReadReg8(m_reg_address,H_BYTE_X_MAG_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_X_MAG_ADDRESS);
+        my=wiringPiI2CReadReg8(m_reg_address,H_BYTE_Y_MAG_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_Y_MAG_ADDRESS);
+        mz=wiringPiI2CReadReg8(m_reg_address,H_BYTE_Z_MAG_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_Z_MAG_ADDRESS);
+	
+	int lx,ly,lz;
+	
+	lx=mx;
+	ly=my;
+	lz=mz;
+	
+	if(lx>m_x_max)
+	  m_x_max = lx;
+	else if (lx<m_x_min)
+	  m_x_min = lx;
+	if(ly>m_x_max)
+	  m_x_max = lx;
+	else if (lx<m_x_min)
+	  m_x_min = lx;
+	if(l>m_x_max)
+	  m_x_max = lx;
+	else if (lx<m_x_min)
+	  m_x_min = lx;
+	
+	
+// 	if (lx > m_x_max.end())
+// 	  m_x_max.push_back(lx);
+// 	else if (lx < m_x_min.end())
+// 	  m_x_min.push_back(lx);
 // 	
-// 	// COMPOSE IMU MSG
-// 	m_imu.linear_acceleration.x = ax;
-// 	m_imu.linear_acceleration.y = ay;
-// 	m_imu.linear_acceleration.z = az;
-// 	m_imu.angular_velocity.x = wx;
-// 	m_imu.angular_velocity.y = wy;
-// 	m_imu.angular_velocity.z = wz;
-// 	m_imu.header.frame_id = m_robot_name+"/odom";
+// 	if (ly > m_y_max.end())
+// 	  m_y_max.push_back(ly);
+// 	else if (ly < m_y_min.end())
+// 	  m_y_min.push_back(ly);
 // 	
-// 	// TODO orientation
-// 	float yaw = wz*dt;
-// 	geometry_msgs::Quaternion l_imu_quaternion = tf::createQuaternionMsgFromYaw(yaw);
-// 	m_imu.orientation.x = l_imu_quaternion.x;
-// 	m_imu.orientation.y = l_imu_quaternion.y;
-// 	m_imu.orientation.z = l_imu_quaternion.z;
-// 	m_imu.orientation.w = l_imu_quaternion.w;
-// 
-// 	m_reader_imu_pub.publish<sensor_msgs::Imu>(m_imu);
+// 	if (lz > m_z_max.end())
+// 	  m_z_max.push_back(lz);
+// 	else if (lz < m_z_min.end())
+// 	  m_z_min.push_back(lz);
+// 	  
+// 	int l_x,l_y,l_z;
+// 	l_x=mx;
+// 	l_y=my;
+// 	l_z=mz;
+	
+	
+
+
+
 }
+
+//vector< double > Heading_calibration::SB_computing()
+//{
+ // std::vector<double>::iterator x_max = std::max_element<double>(m_vector_x.begin(),m_vector_x.end());
+//   double x_min = std::min_element<double>(m_vector_x.begin(),m_vector_x.end());
+//   double y_max = std::max_element<double>(m_vector_y.begin(),m_vector_y.end());
+//   double y_min = std::min_element<double>(m_vector_y.begin(),m_vector_y.end());
+//   double z_max = std::max_element<double>(m_vector_z.begin(),m_vector_z.end());
+//   double z_min = std::min_element<double>(m_vector_z.begin(),m_vector_z.end());
+  
+ // S_x = max(1, (y_max-y_min)/(x_max-x_min));
+ 
+  
+
+//}
+
+
+
