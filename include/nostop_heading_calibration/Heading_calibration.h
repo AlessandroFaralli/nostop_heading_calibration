@@ -25,9 +25,7 @@
 #define H_BYTE_Z_MAG_ADDRESS 0x08
 #define L_BYTE_Z_MAG_ADDRESS 0x07
 
-#define IMU_ADDRESS 0x68
 
-#define message_size 10 
 namespace Robotics 
 {	
 	namespace GameTheory
