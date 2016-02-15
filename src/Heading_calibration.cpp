@@ -18,26 +18,25 @@ void callback(const ros::TimerEvent& event)
 }
 
 
-Heading_calibration::Heading_calibration(std::string& robot_name,std::string& topic_name,float& ang_vel_z,int& duration):
+Heading_calibration::Heading_calibration(std::string& robot_name,float& ang_vel_z,int& duration):
 m_robot_name(robot_name)
-, m_topic_name(topic_name)
 , m_address(IMU_ADDRESS)
 , m_flag(0)
 {
 	ROS_INFO("HEADING_CALIBRATION  %s: ON", robot_name.c_str());
 	// Publish Sensor Information:
-	//m_reader_imu_pub = m_imu_reader_node.advertise<sensor_msgs::Imu>("/"+m_robot_name+"/imu_data", 5);
-	m_pub_command = m_imu_calibration_node.advertise<geometry_msgs::Twist>("/"+m_topic_name, 5);
+	m_pub_calibration = m_imu_calibration_node.advertise<std_msgs::Float64MultiArray>("/"+m_robot_name+"/magnetometer_SF_B", 5);
+	m_pub_command = m_imu_calibration_node.advertise<geometry_msgs::Twist>("/cmd_vel", 5);//TODO
 	m_command.angular.z = ang_vel_z;
 	timer = m_imu_calibration_node.createTimer(ros::Duration(duration), callback);
-// 	wiringPiSetup();
+ 	wiringPiSetup();
 	try{
-	    //m_reg_address = wiringPiI2CSetup(m_address);
+	  m_reg_address = wiringPiI2CSetup(m_address);
 	} catch(std::exception &e){
 	  std::cerr<<"Error open IMU"<< e.what() << std::endl;
 	}
 // 	//disable sleep mode
-//         wiringPiI2CWriteReg8(m_reg_address,0x6B,00);
+         wiringPiI2CWriteReg8(m_reg_address,0x6B,00);
 }
 
 
@@ -53,6 +52,7 @@ void Heading_calibration::magnetometer_calibration()
 
     while (ros::ok())
     {
+       std_msgs::Float64MultiArray SB;
        switch(m_flag)
        {
 	 case 0:
@@ -65,25 +65,31 @@ void Heading_calibration::magnetometer_calibration()
 	 }
 	    
 	 case 1:
-	 {
-	   //SB_computing();
-	   //calcolo di S e B
+	 {	   
+	   SB = SB_computing();
 	   m_flag=2;
 	   break;
 	 }
 	 
 	 case 2:
 	 {
-	   //pubblicare su topic 
-	   //richiama timer e dopo 1 sec
+	   m_pub_calibration.publish<std_msgs::Float64MultiArray>(SB);
 	   m_flag=3;
 	   break;
 	 }
 	 
 	 case 3:
 	 {
-	   //chiudi nodo ros shutdown()
+	   ros::shutdown();
+	   break;
 	 }
+	 
+	 default:
+	   
+	{	
+	  ROS_ERROR("Some errors. :-(");
+	  break;
+	}
 	
       }
 }
@@ -97,65 +103,40 @@ void Heading_calibration::magnetometer_data_saving()
         mz=wiringPiI2CReadReg8(m_reg_address,H_BYTE_Z_MAG_ADDRESS)<<8|wiringPiI2CReadReg8(m_reg_address,L_BYTE_Z_MAG_ADDRESS);
 	
 	int lx,ly,lz;
-	
+
 	lx=mx;
-	ly=my;
+	ly=my;  
 	lz=mz;
 	
-	if(lx>m_x_max)
-	  m_x_max = lx;
-	else if (lx<m_x_min)
-	  m_x_min = lx;
-	if(ly>m_x_max)
-	  m_x_max = lx;
-	else if (lx<m_x_min)
-	  m_x_min = lx;
-	if(l>m_x_max)
-	  m_x_max = lx;
-	else if (lx<m_x_min)
-	  m_x_min = lx;
-	
-	
-// 	if (lx > m_x_max.end())
-// 	  m_x_max.push_back(lx);
-// 	else if (lx < m_x_min.end())
-// 	  m_x_min.push_back(lx);
-// 	
-// 	if (ly > m_y_max.end())
-// 	  m_y_max.push_back(ly);
-// 	else if (ly < m_y_min.end())
-// 	  m_y_min.push_back(ly);
-// 	
-// 	if (lz > m_z_max.end())
-// 	  m_z_max.push_back(lz);
-// 	else if (lz < m_z_min.end())
-// 	  m_z_min.push_back(lz);
-// 	  
-// 	int l_x,l_y,l_z;
-// 	l_x=mx;
-// 	l_y=my;
-// 	l_z=mz;
-	
-	
-
-
+	compare_data(lx,m_x_max,m_x_min);
+	compare_data(ly,m_y_max,m_y_min);
+	compare_data(lz,m_z_max,m_z_min);
 
 }
 
-//vector< double > Heading_calibration::SB_computing()
-//{
- // std::vector<double>::iterator x_max = std::max_element<double>(m_vector_x.begin(),m_vector_x.end());
-//   double x_min = std::min_element<double>(m_vector_x.begin(),m_vector_x.end());
-//   double y_max = std::max_element<double>(m_vector_y.begin(),m_vector_y.end());
-//   double y_min = std::min_element<double>(m_vector_y.begin(),m_vector_y.end());
-//   double z_max = std::max_element<double>(m_vector_z.begin(),m_vector_z.end());
-//   double z_min = std::min_element<double>(m_vector_z.begin(),m_vector_z.end());
+
+void Heading_calibration::compare_data(int& l,int& m_max,int& m_min)
+{
+   	if(l>m_max)
+	  m_max = l;
+	else if (l<m_min)
+	  m_min = l;
+}
+
+std_msgs::Float64MultiArray Heading_calibration::SB_computing()
+{
+ double S_x,S_y,B_x,B_y;
+ std_msgs::Float64MultiArray SB;
   
- // S_x = max(1, (y_max-y_min)/(x_max-x_min));
+ S_x = max(1, (m_y_max-m_y_min)/(m_x_max-m_x_min));
+ SB.data.push_back(S_x);
+ S_y = max(1, (m_x_max-m_x_min)/(m_y_max-m_y_min));
+ SB.data.push_back(S_y);
+ B_x= ((m_x_max-m_x_min)/2-m_x_max)*S_x;
+ SB.data.push_back(B_x);
+ B_y= ((m_y_max-m_y_min)/2-m_x_max)*S_y;
+ SB.data.push_back(B_y);
+
+ return SB;
  
-  
-
-//}
-
-
-
+}

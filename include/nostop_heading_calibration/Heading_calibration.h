@@ -11,7 +11,7 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
 #include <tf/transform_broadcaster.h>
-#include "std_msgs/UInt8MultiArray.h"
+#include "std_msgs/Float64MultiArray.h"
 #include <Threads.h>
 
 //// By http://www.botched.co.uk/pic-tutorials/mpu6050-setup-data-aquisition/
@@ -47,17 +47,18 @@ namespace Robotics
 			int m_flag;
 			std::vector<int> m_vector_x, m_vector_y, m_vector_z;
 			ros::Publisher m_pub_command;
+			ros::Publisher m_pub_calibration;
 			sensor_msgs::Imu m_imu;
 			geometry_msgs::Twist m_command;
 			
 			ros::Timer timer;
 
 		public:
-			Heading_calibration(std::string& robot_name,std::string& topic_name,float& ang_vel_z,int& duration); 
+			Heading_calibration(std::string& robot_name,float& ang_vel_z,int& duration); 
 			void magnetometer_data_saving();
 			void magnetometer_calibration();
-			std::vector<double> SB_computing();
-			//void Callback(const ros::TimerEvent& event);
+			std_msgs::Float64MultiArray SB_computing();
+			void compare_data(int& l,int& m_max,int& m_min);
 			~Heading_calibration();
 		};
 
