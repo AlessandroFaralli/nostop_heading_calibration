@@ -33,7 +33,6 @@ namespace Robotics
 		class Heading_calibration
 		{
 		public:
-
 		        ros::NodeHandle m_imu_calibration_node;
 			std::string m_robot_name;
 			std::string m_topic_name;
