@@ -39,7 +39,8 @@ namespace Robotics
 			char m_address;
 			int m_reg_address;
 			int m_x_min,m_x_max,m_y_min,m_y_max,m_z_min,m_z_max;
-			
+			float m_x_min_f,m_x_max_f,m_y_min_f,m_y_max_f,m_z_min_f,m_z_max_f;
+			Mutex m_mutex;
 			// IMU
 			int m_flag;
 			std::vector<int> m_vector_x, m_vector_y, m_vector_z;
@@ -47,14 +48,15 @@ namespace Robotics
 			ros::Publisher m_pub_calibration;
 			sensor_msgs::Imu m_imu;
 			geometry_msgs::Twist m_command;
-			
+			std_msgs::Float64MultiArray m_SB_values;
 			ros::Timer timer;
 
 		public:
 			Heading_calibration(std::string& robot_name,float& ang_vel_z,int& duration); 
 			void magnetometer_data_saving();
-			void magnetometer_calibration();
-			std_msgs::Float64MultiArray SB_computing();
+			int magnetometer_calibration();
+			void SB_computing();
+			void cast_int_to_float();
 			void compare_data(int& l,int& m_max,int& m_min);
 			~Heading_calibration();
 		};
