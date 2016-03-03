@@ -2,7 +2,7 @@
 
 <launch>
 <!--robot motor control node -->   
-  <node pkg="nostop_heading_calibration" type="heading_calibration_node" name="heading_calibration" required="true" output="screen">
+  <node pkg="nostop_heading_calibration" type="heading_calibration_node" name="heading_calibration_red_blue" required="true" output="screen">
     <param name="robot_name" value="red_blue" />
     <param name="ang_vel_z" value="1"/>
     <param name="duration" value="30" />
