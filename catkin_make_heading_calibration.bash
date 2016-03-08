@@ -25,3 +25,8 @@ sudo chown root:root heading_calibration_node  # change ownship to root
 sudo chmod a+rx heading_calibration_node       # set as executable by all
 sudo chmod u+s heading_calibration_node        # set the setuid bit
 
+cd 
+cd ros_catkin_ws/devel/lib/irobotcreate2 # cd to the directory with your node
+sudo chown root:root irobotcreate2  # change ownship to root
+sudo chmod a+rx irobotcreate2       # set as executable by all
+sudo chmod u+s irobotcreate2        # set the setuid bit
